@@ -1,47 +1,61 @@
 import os
+from pathlib import Path
 
 import streamlit as st
 import whisper
 from moviepy.editor import VideoFileClip
-from pathlib import Path
-
 
 TEMP_DIR = Path("temp")
 TEMP_DIR.mkdir(exist_ok=True)
 
 
-st.title("MP4 to transcript converter")
-uploaded_file = st.file_uploader("Choose an MP4 file", type="mp4", )
-filepath = None
-if uploaded_file is not None:
-    # Save the file to the server
-    filepath = TEMP_DIR / uploaded_file.name
-    with open(filepath, "wb") as f:
-        f.write(uploaded_file.getbuffer())
-    st.success("File uploaded successfully.")
+model_size = st.sidebar.selectbox("Model Size", ["medium", "small", "base", "tiny"], index=2)
+language = st.sidebar.radio("Model Language", ["English", "Multilingual"])
+
+# Set the model path based on the selected options
+if language == "English":
+    model_path = f"{model_size}.en"
 else:
-    st.error("Please upload an MP4 file.")
-    st.stop()
-# Check if the uploaded file extension is mp4
-file_extension = filepath.suffix
-if file_extension.lower() != ".mp4":
-    st.error("The file you uploaded is not an MP4 file. Please upload an MP4 file.")
+    model_path = model_size
+
+# Upload video file
+uploaded_file = st.file_uploader("Upload Video File", type=["mp4", "m4a"])
+
+run_button = st.button("Transcribe")
+
+if not run_button:
     st.stop()
 
-# Load the Whisper model
-model = whisper.load_model("base")
+if uploaded_file is None:
+    st.error("Must upload mp4 or m4a file.")
+    st.stop()
 
-# Convert MP4 to WAV
-audio_path = filepath.with_suffix(".wav")
+# Save the uploaded file to a temporary location
+with open(TEMP_DIR / uploaded_file.name, "wb") as file:
+    file.write(uploaded_file.getbuffer())
+
+# Set the file path and extension
+filepath = TEMP_DIR / uploaded_file.name
+file_extension = os.path.splitext(filepath)[1]
 
 # Extract audio from video
-video_clip = VideoFileClip(str(filepath))
-audio_clip = video_clip.audio
-if audio_clip is None:
-    raise ValueError("The video does not contain any audio.")
-audio_clip.write_audiofile(audio_path)
+if file_extension.lower() == ".mp4":
+    # Convert MP4/M4A to WAV
+    audio_path = filepath.with_suffix(".wav")
+    video_clip = VideoFileClip(str(filepath))
+    audio_clip = video_clip.audio
+    if audio_clip is None:
+        raise ValueError("The video does not contain any audio.")
+    audio_clip.write_audiofile(audio_path)
+elif file_extension.lower() == ".m4a":
+    audio_path = filepath
+else:
+    raise ValueError("The file extension is not supported.")
 
-st.success("MP4 file converted to WAV successfully.")
+# Load the Whisper model
+model = whisper.load_model(model_path)
+
+st.success("MP4/M4A file converted to WAV successfully.")
 
 result = model.transcribe(str(audio_path), verbose=True)
 transcript = result["text"]
