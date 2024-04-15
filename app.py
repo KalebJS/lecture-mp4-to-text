@@ -9,7 +9,9 @@ TEMP_DIR = Path("temp")
 TEMP_DIR.mkdir(exist_ok=True)
 
 
-model_size = st.sidebar.selectbox("Model Size", ["large", "medium", "small", "base", "tiny"], index=2)
+model_size = st.sidebar.selectbox(
+    "Model Size", ["large", "medium", "small", "base", "tiny"], index=2
+)
 language = st.sidebar.radio("Model Language", ["English", "Multilingual"])
 
 # Set the model path based on the selected options
@@ -69,5 +71,8 @@ with open(transcript_file_path, "w") as text_file:
 
 with open(transcript_file_path, "rb") as file:
     btn = st.download_button(
-        label="Download Transcript as TXT", data=file, file_name="transcript.txt", mime="text/plain"
+        label="Download Transcript as TXT",
+        data=file,
+        file_name="transcript.txt",
+        mime="text/plain",
     )
