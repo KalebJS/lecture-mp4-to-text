@@ -9,7 +9,7 @@ TEMP_DIR = Path("temp")
 TEMP_DIR.mkdir(exist_ok=True)
 
 
-model_size = st.sidebar.selectbox("Model Size", ["medium", "small", "base", "tiny"], index=2)
+model_size = st.sidebar.selectbox("Model Size", ["large", "medium", "small", "base", "tiny"], index=2)
 language = st.sidebar.radio("Model Language", ["English", "Multilingual"])
 
 # Set the model path based on the selected options
